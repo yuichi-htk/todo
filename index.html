@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>やることリスト</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Shippori+Mincho:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink-black: #2d2d2d;
+            --paper-white: #fafaf8;
+            --washi-cream: #f5f3ed;
+            --sumi-gray: #5a5a5a;
+            --accent-red: #d32f2f;
+            --subtle-border: #e8e6dd;
+            --shadow-soft: rgba(0, 0, 0, 0.08);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: linear-gradient(135deg, var(--washi-cream) 0%, var(--paper-white) 100%);
+            color: var(--ink-black);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,0.015) 2px, rgba(0,0,0,0.015) 4px);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 580px;
+            background: var(--paper-white);
+            border-radius: 2px;
+            box-shadow: 
+                0 1px 3px var(--shadow-soft),
+                0 8px 24px rgba(0, 0, 0, 0.06);
+            padding: 3rem 2.5rem;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-family: 'Shippori Mincho', serif;
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--ink-black);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .subtitle {
+            font-size: 0.875rem;
+            color: var(--sumi-gray);
+            margin-bottom: 2.5rem;
+            font-weight: 300;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 2rem;
+        }
+
+        #todoInput {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            border: 1px solid var(--subtle-border);
+            background: white;
+            font-size: 0.95rem;
+            font-family: 'Noto Sans JP', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 2px;
+        }
+
+        #todoInput:focus {
+            outline: none;
+            border-color: var(--ink-black);
+            box-shadow: 0 0 0 3px rgba(45, 45, 45, 0.08);
+        }
+
+        #todoInput::placeholder {
+            color: #bbb;
+        }
+
+        #addBtn {
+            padding: 0.875rem 1.75rem;
+            background: var(--ink-black);
+            color: white;
+            border: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-family: 'Noto Sans JP', sans-serif;
+            border-radius: 2px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #addBtn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        #addBtn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        #addBtn:hover {
+            background: #1a1a1a;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #addBtn:active {
+            transform: translateY(0);
+        }
+
+        .filters {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--subtle-border);
+            padding-bottom: 1rem;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--sumi-gray);
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Noto Sans JP', sans-serif;
+            position: relative;
+            font-weight: 400;
+        }
+
+        .filter-btn::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--ink-black);
+            transform: scaleX(0);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .filter-btn.active {
+            color: var(--ink-black);
+            font-weight: 500;
+        }
+
+        .filter-btn.active::after {
+            transform: scaleX(1);
+        }
+
+        #todoList {
+            list-style: none;
+            min-height: 200px;
+        }
+
+        .todo-item {
+            background: white;
+            border: 1px solid var(--subtle-border);
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 2px;
+            animation: itemSlide 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes itemSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .todo-item:hover {
+            border-color: var(--ink-black);
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px var(--shadow-soft);
+        }
+
+        .todo-item.completed {
+            opacity: 0.5;
+            background: var(--washi-cream);
+        }
+
+        .todo-item.completed:hover {
+            opacity: 0.7;
+        }
+
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--ink-black);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            flex-shrink: 0;
+            transition: all 0.3s;
+        }
+
+        .checkbox.checked {
+            background: var(--ink-black);
+        }
+
+        .checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 0.75rem;
+            animation: checkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes checkPop {
+            0% {
+                transform: translate(-50%, -50%) scale(0);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.2);
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+
+        .todo-text {
+            flex: 1;
+            font-size: 0.95rem;
+            color: var(--ink-black);
+            transition: all 0.3s;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: var(--sumi-gray);
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: var(--sumi-gray);
+            cursor: pointer;
+            font-size: 1.25rem;
+            padding: 0.25rem 0.5rem;
+            opacity: 0;
+            transition: all 0.3s;
+            line-height: 1;
+        }
+
+        .todo-item:hover .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            color: var(--accent-red);
+            transform: scale(1.2);
+        }
+
+        .stats {
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--subtle-border);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            color: var(--sumi-gray);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--sumi-gray);
+            font-size: 0.95rem;
+        }
+
+        .empty-state::before {
+            content: '📝';
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            #addBtn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>やることリスト</h1>
+        <p class="subtitle">今日の予定を整理しましょう</p>
+
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="todoInput" 
+                placeholder="新しいタスクを入力..."
+                autocomplete="off"
+            >
+            <button id="addBtn">追加</button>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="all">すべて</button>
+            <button class="filter-btn" data-filter="active">未完了</button>
+            <button class="filter-btn" data-filter="completed">完了済み</button>
+        </div>
+
+        <ul id="todoList"></ul>
+
+        <div class="stats">
+            <span id="totalCount">全 0 件</span>
+            <span id="activeCount">未完了 0 件</span>
+        </div>
+    </div>
+
+    <script>
+        class TodoApp {
+            constructor() {
+                this.todos = JSON.parse(localStorage.getItem('todos')) || [];
+                this.filter = 'all';
+                this.init();
+            }
+
+            init() {
+                this.input = document.getElementById('todoInput');
+                this.addBtn = document.getElementById('addBtn');
+                this.todoList = document.getElementById('todoList');
+                this.filterBtns = document.querySelectorAll('.filter-btn');
+
+                this.addBtn.addEventListener('click', () => this.addTodo());
+                this.input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTodo();
+                });
+
+                this.filterBtns.forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        this.filterBtns.forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.filter = e.target.dataset.filter;
+                        this.render();
+                    });
+                });
+
+                this.render();
+            }
+
+            addTodo() {
+                const text = this.input.value.trim();
+                if (!text) return;
+
+                this.todos.push({
+                    id: Date.now(),
+                    text: text,
+                    completed: false
+                });
+
+                this.input.value = '';
+                this.saveTodos();
+                this.render();
+            }
+
+            toggleTodo(id) {
+                const todo = this.todos.find(t => t.id === id);
+                if (todo) {
+                    todo.completed = !todo.completed;
+                    this.saveTodos();
+                    this.render();
+                }
+            }
+
+            deleteTodo(id) {
+                this.todos = this.todos.filter(t => t.id !== id);
+                this.saveTodos();
+                this.render();
+            }
+
+            saveTodos() {
+                localStorage.setItem('todos', JSON.stringify(this.todos));
+            }
+
+            getFilteredTodos() {
+                if (this.filter === 'active') {
+                    return this.todos.filter(t => !t.completed);
+                }
+                if (this.filter === 'completed') {
+                    return this.todos.filter(t => t.completed);
+                }
+                return this.todos;
+            }
+
+            render() {
+                const filteredTodos = this.getFilteredTodos();
+                
+                if (filteredTodos.length === 0) {
+                    this.todoList.innerHTML = '<div class="empty-state">タスクがありません</div>';
+                } else {
+                    this.todoList.innerHTML = filteredTodos.map(todo => `
+                        <li class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+                            <div class="checkbox ${todo.completed ? 'checked' : ''}" onclick="app.toggleTodo(${todo.id})"></div>
+                            <span class="todo-text">${this.escapeHtml(todo.text)}</span>
+                            <button class="delete-btn" onclick="app.deleteTodo(${todo.id})">×</button>
+                        </li>
+                    `).join('');
+                }
+
+                this.updateStats();
+            }
+
+            updateStats() {
+                const total = this.todos.length;
+                const active = this.todos.filter(t => !t.completed).length;
+                
+                document.getElementById('totalCount').textContent = `全 ${total} 件`;
+                document.getElementById('activeCount').textContent = `未完了 ${active} 件`;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        const app = new TodoApp();
+    </script>
+</body>
+</html>
